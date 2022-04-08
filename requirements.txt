@@ -1,0 +1,7 @@
+mtcnn
+numpy
+opencv-python
+tensorflow
+scipy
+Pillow
+tqdm
