@@ -110,6 +110,7 @@ class face_recognition_system:
 
         cv2.imshow("Result", res_img)
         cv2.waitKey(0)
+        cv2.imwrite('result.jpg', res_img)
 
         return res_img
 
