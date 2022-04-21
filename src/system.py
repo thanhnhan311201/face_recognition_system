@@ -18,8 +18,7 @@ except:
 
 class face_recognition_system:
     def __init__(self, dataset_path, image_folder):
-        # self.extractor_method = 'VGG16_FE'
-        self.extractor = feature_extractor.InceptionV3_FE()
+        self.extractor = feature_extractor.MobileNetV2_FE()
 
         self.detector = face_detector.FaceDetector()
 
@@ -46,11 +45,6 @@ class face_recognition_system:
                 return 0
 
             x_min, y_min, x_max, y_max = bbox
-
-            processed_img = img[y_min:y_max, x_min:x_max]
-            cv2.imshow("Processed", processed_img)
-            cv2.waitKey(0)
-
             PIL_image = Image.open(img_path_full).crop((x_min, y_min, x_max, y_max))
                 
             try:
@@ -78,7 +72,7 @@ class face_recognition_system:
             cos_sim = 1 - spatial.distance.cosine(feature_vectors, feature_img)
 
             name = vector_file.split('.')[0]
-            temp = {'similary': cos_sim}
+            temp = {'similary': round(cos_sim, 2)}
             res_dict[name] = temp
 
             if cos_sim > max_similarity:
@@ -98,6 +92,8 @@ class face_recognition_system:
         bbox = self.detector.detect(img)
         if bbox is None:
             return 0
+
+        res_dict = {}
 
         x_min, y_min, x_max, y_max = bbox
         processed_img = PIL_img.crop((x_min, y_min, x_max, y_max))
@@ -128,6 +124,11 @@ class face_recognition_system:
         if not cap.isOpened():
             raise IOError("Cannot open webcam")
 
+        prev_frame_time = 0
+        new_frame_time = 0
+
+        res_dict = {}
+
         while True:
             ret, frame = cap.read()
 
@@ -149,8 +150,21 @@ class face_recognition_system:
                 face_name = "Unknown"
                 cv2.putText(res_frame, face_name, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             else:
-                face_name, similarity, _ = result
+                face_name, similarity, res_dict = result
                 cv2.putText(res_frame, f'{face_name}: {round(similarity, 2)}', (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+            new_frame_time = time.time()
+            fps = 1 / (new_frame_time - prev_frame_time)
+            prev_frame_time = new_frame_time
+            fps = str(int(fps * 100))
+            cv2.putText(res_frame, fps, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (100, 255, 0), 1, cv2.LINE_AA)
+            cv2.putText(res_frame, 'FPS', (40, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (100, 255, 0), 1, cv2.LINE_AA)
+
+            y_axis = 1
+            for face in res_dict:
+                string = f'{face}: {res_dict[face]["similary"]}'
+                cv2.putText(res_frame, string, (500, y_axis * 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (100, 255, 0), 1, cv2.LINE_AA)
+                y_axis += 1
 
             cv2.imshow("Result", res_frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
