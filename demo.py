@@ -11,7 +11,8 @@ if __name__ == '__main__':
 
     my_system = face_recognition_system(dataset_path, image_folder)
 
-    demo_img = 'demo_imgs/demo2.jpg'
+    # demo_img = 'demo_imgs/demo1.jpg'
+    demo_img = 'datasets/images/nhan.PNG'
     my_system.recognize_face_via_image(demo_img)
 
     # my_system.recognize_face_via_camera()

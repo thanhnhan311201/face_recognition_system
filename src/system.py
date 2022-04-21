@@ -18,8 +18,8 @@ except:
 
 class face_recognition_system:
     def __init__(self, dataset_path, image_folder):
-        self.extractor_method = 'Xception_FE'
-        self.extractor = feature_extractor.Xception_FE()
+        # self.extractor_method = 'VGG16_FE'
+        self.extractor = feature_extractor.InceptionV3_FE()
 
         self.detector = face_detector.FaceDetector()
 
@@ -41,10 +41,16 @@ class face_recognition_system:
             img_path_full = os.path.join(self.image_folder + img_path)
             img = cv2.imread(img_path_full)
 
-            if self.detector.detect(img) is None:
+            bbox = self.detector.detect(img)
+            if bbox is None:
                 return 0
 
-            x_min, y_min, x_max, y_max = self.detector.detect(img)
+            x_min, y_min, x_max, y_max = bbox
+
+            processed_img = img[y_min:y_max, x_min:x_max]
+            cv2.imshow("Processed", processed_img)
+            cv2.waitKey(0)
+
             PIL_image = Image.open(img_path_full).crop((x_min, y_min, x_max, y_max))
                 
             try:
@@ -75,9 +81,14 @@ class face_recognition_system:
             temp = {'similary': cos_sim}
             res_dict[name] = temp
 
+            print(vector_file)
+            print(cos_sim)
+            print(name) 
+
             if cos_sim > max_similarity:
                 max_similarity = cos_sim
-                face_name = vector_file.split('.')[0]
+                face_name = name
+                print("Name:", face_name)
 
         if max_similarity < 0.5:
             return 'Unknown'
@@ -89,18 +100,20 @@ class face_recognition_system:
             PIL_img = Image.open(img)
             img = cv2.imread(img)
 
-        if self.detector.detect(img) is None:
+        bbox = self.detector.detect(img)
+        if bbox is None:
             return 0
 
-        x_min, y_min, x_max, y_max = self.detector.detect(img)
+        x_min, y_min, x_max, y_max = bbox
         processed_img = PIL_img.crop((x_min, y_min, x_max, y_max))
         res_img = cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
-        if self.verify_face(processed_img) == "Unknown":
+        result = self.verify_face(processed_img)
+        if result == "Unknown":
             face_name = "Unknown"
             cv2.putText(res_img, face_name, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         else:
-            face_name, similarity, res_dict = self.verify_face(processed_img)
+            face_name, similarity, res_dict = result
             cv2.putText(res_img, f'{face_name}: {round(similarity, 2)}', (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
 
@@ -128,18 +141,20 @@ class face_recognition_system:
 
             # frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
 
-            if self.detector.detect(frame) is None:
+            bbox = self.detector.detect(frame)
+            if bbox is None:
                 continue
 
-            x_min, y_min, x_max, y_max = self.detector.detect(frame)
+            x_min, y_min, x_max, y_max = bbox
             processed_frame = Image.fromarray(np.uint8(frame[y_min:y_max, x_min:x_max])).convert('RGB')
             res_frame = cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
-            if self.verify_face(processed_frame) == "Unknown":
+            result = self.verify_face(processed_frame)
+            if result == "Unknown":
                 face_name = "Unknown"
                 cv2.putText(res_frame, face_name, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             else:
-                face_name, similarity, _ = self.verify_face(processed_frame)
+                face_name, similarity, _ = result
                 cv2.putText(res_frame, f'{face_name}: {round(similarity, 2)}', (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
             cv2.imshow("Result", res_frame)
