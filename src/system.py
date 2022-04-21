@@ -81,14 +81,9 @@ class face_recognition_system:
             temp = {'similary': cos_sim}
             res_dict[name] = temp
 
-            print(vector_file)
-            print(cos_sim)
-            print(name) 
-
             if cos_sim > max_similarity:
                 max_similarity = cos_sim
                 face_name = name
-                print("Name:", face_name)
 
         if max_similarity < 0.5:
             return 'Unknown'
