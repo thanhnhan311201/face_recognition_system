@@ -18,7 +18,7 @@ except:
 
 class face_recognition_system:
     def __init__(self, dataset_path, image_folder):
-        self.extractor = feature_extractor.MobileNetV2_FE()
+        self.extractor = feature_extractor.Xception_FE()
 
         self.detector = face_detector.FaceDetector()
 
